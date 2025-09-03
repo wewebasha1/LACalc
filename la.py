@@ -1,53 +1,57 @@
 import sys
 from matrix import Matrix
+from response import Response
+from command import Command
 from fractions import Fraction
 
 
 def main():
-    matrix = None
+    matrix = Matrix(None, None, None, None)
     while True:
-        command = input(":")
-        response = command_processor(command, matrix)
-        print(response[1])
+        user_input = input(":")
+        response = command_processor(user_input, matrix)
+        matrix = response.get_matrix()
+        print(response.get_message())
 
 
-def command_processor(command, matrix):
-    if command == "quit":
+def command_processor(user_input, matrix):
+    if user_input == "quit":
         sys.exit()
-    commands = command.split(" ")
-    match commands[0]:
+    user_input_list = user_input.split(" ")
+    command = Command(user_input_list[0], user_input_list[1:])
+    match command.get_action():
         case "make":
-            response = make_array(commands[1], commands[2], commands[3])
-            return response[0], response[1]
+            return make_array(command.get_parameter()[0], command.get_parameter()[1], command.get_parameter()[2])
         case "addr":
-            response = addr(commands[1], commands[2])
-            return response[0], response[1]
+            return addr(matrix, command.get_parameter()[0])
         case "addc":
-            pass
+            return addc(matrix, command.get_parameter()[0])
         case "replace":
-            pass
+            return replace(matrix, command.get_parameter()[0], command.get_parameter()[1], command.get_parameter()[2])
         case "change":
             pass
         case "scale":
             pass
         case "print":
             matrix.print_coefficient_matrix()
-            return matrix, ""
+            return Response("", matrix)
+        case "undo":
+            pass
         case _:
-            return matrix, "command not recognized"
+            return Response("command not recognized", matrix)
 
 
 def make_array(dimensions, variable, values):
     # save dimensions
     dimensions_list = dimensions.split('x')
     if len(dimensions_list) != 2:
-        return None, "incorrect dimensions, matrix not created"
+        return Response("incorrect dimensions, matrix not created", None)
     if not dimensions_list[0].isdigit or not dimensions_list[1].isdigit:
-        return None, "incorrect dimensions, matrix not created"
+        return Response("incorrect dimensions, matrix not created", None)
     rows = int(dimensions_list[0])
     columns = int(dimensions_list[1])
     if rows <= 0 or columns <= 0:
-        return None, "incorrect dimensions, matrix not created"
+        return Response("incorrect dimensions, matrix not created", None)
 
     # make variables
     variables = None
@@ -66,20 +70,44 @@ def make_array(dimensions, variable, values):
             row_num_list = list(map(float, row_str_list))
             coefficient_matrix.append(row_num_list)
     except ValueError:
-        return None, "incorrect values, matrix not created"
+        return Response("incorrect values, matrix not created", None)
     except IndexError:
-        return None, "incorrect values, matrix not created"
+        return Response("incorrect values, matrix not created", None)
 
     # return matrix
     matrix = Matrix(rows, columns, coefficient_matrix, variables)
-    return matrix, "matrix created"
+    return Response("matrix created", matrix)
 
 
 def addr(matrix, row):
-    row_str_list = row.split(',')
-    row_int_list = list(map(int, row_str_list))
-    matrix.add_row(row_int_list)
-    return matrix, "row added"
+    try:
+        row_str_list = row.split(',')
+        if len(row_str_list) != matrix.get_columns():
+            return Response("incorrect column count, row not added", matrix)
+        row_int_list = list(map(int, row_str_list))
+        matrix.add_row(row_int_list)
+        return Response("row added", matrix)
+    except ValueError:
+        return Response("incorrect values, row not added", matrix)
+
+
+def addc(matrix, column):
+    try:
+        column_str_list = column.split(',')
+        if len(column_str_list) != matrix.get_rows():
+            return Response("incorrect row count, column not added", matrix)
+        column_int_list = list(map(int, column_str_list))
+        matrix.add_column(column_int_list)
+        return Response("column added", matrix)
+    except ValueError:
+        return Response("incorrect values, column not added", matrix)
+
+
+def replace(matrix, target_row, addend_row, multiplier):
+    target = int(target_row.replace("r", ""))
+    addend = int(addend_row.replace("r", ""))
+    matrix.replace((target-1), (addend-1), float(multiplier))
+    return Response(f"R{target} + ({multiplier}R{addend}) -> R{target}", matrix)
 
 
 if __name__ == '__main__':

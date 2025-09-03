@@ -5,9 +5,26 @@ class Matrix:
         self.coefficient_matrix = coefficient_matrix
         self.variable_matrix = variables
 
+    def get_rows(self):
+        return self.rows
+
+    def get_columns(self):
+        return self.columns
+
+    def get_coefficient_matrix(self):
+        coefficient_str = ""
+        for row in self.coefficient_matrix:
+            for column in row:
+                coefficient_str += f"{column},"
+            coefficient_str = coefficient_str[:-1]
+            coefficient_str += ':'
+        coefficient_str = coefficient_str[:-1]
+        return coefficient_str
+
+
     def replace(self, target_row, addend_row, multiplier):
         for column in range(self.columns):
-            self.coefficient_matrix[target_row][column] += self.coefficient_matrix[addend_row][column] * multiplier
+            self.coefficient_matrix[target_row][column] += (self.coefficient_matrix[addend_row][column] * multiplier)
 
     def interchange(self, first_row, second_row):
         temp = self.coefficient_matrix[first_row]
