@@ -12,6 +12,12 @@ class Matrix:
         return self.columns
 
     def get_coefficient_matrix(self):
+        return self.coefficient_matrix
+
+    def get_variable_matrix(self):
+        return self.variable_matrix
+
+    def get_coefficient_matrix_str(self):
         coefficient_str = ""
         for row in self.coefficient_matrix:
             for column in row:
@@ -20,7 +26,6 @@ class Matrix:
             coefficient_str += ':'
         coefficient_str = coefficient_str[:-1]
         return coefficient_str
-
 
     def replace(self, target_row, addend_row, multiplier):
         for column in range(self.columns):
@@ -47,7 +52,11 @@ class Matrix:
     def print_coefficient_matrix(self):
         for row in self.coefficient_matrix:
             for column in row:
-                if column >= 0:
+                if column.denominator == 1 and column >= 0:
+                    print(f" {column}", end='   ')
+                elif column.denominator == 1:
+                    print(column, end='   ')
+                elif column >= 0:
                     print(f" {column}", end=' ')
                 else:
                     print(column, end=' ')
